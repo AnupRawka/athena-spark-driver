@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-package com.b2wdigital.spark.athena
+package com.b2w.ml.spark.athena
 
 import java.sql.{Driver, DriverManager}
 
-import com.b2wdigital.spark.athena.util.Utils
+import com.b2w.ml.spark.athena.util.Utils
 import org.apache.spark.internal.Logging
 
 import scala.collection.mutable

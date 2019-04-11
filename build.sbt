@@ -1,5 +1,5 @@
 
-name := "spark-athena"
+name := "athena-spark-driver"
 
 version := "1.1"
 
@@ -21,8 +21,7 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-hive" % sparkVersion % "provided",
   "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
 
-  "com.amazonaws" % "aws-java-sdk-core" % awsSdkVersion % "provided",
-  "com.amazonaws" % "aws-java-sdk-iam" % awsSdkVersion % "provided",
+  "com.amazonaws" % "aws-java-sdk-iam" % awsSdkVersion,
   "com.syncron.amazonaws" % "simba-athena-jdbc-driver" % "2.0.2",
 
   "org.apache.logging.log4j" % "log4j-core" % "2.11.2" % "provided",
@@ -68,12 +67,13 @@ assemblyMergeStrategy in assembly := {
   case PathList("com", "esotericsoftware", xs @ _*) => MergeStrategy.last
   case PathList("com", "codahale", xs @ _*) => MergeStrategy.last
   case PathList("com", "yammer", xs @ _*) => MergeStrategy.last
+  case PathList("com", "amazonaws", xs @ _*) => MergeStrategy.last
   case "about.html" => MergeStrategy.rename
   case "META-INF/ECLIPSEF.RSA" => MergeStrategy.last
   case "META-INF/mailcap" => MergeStrategy.last
   case "META-INF/mimetypes.default" => MergeStrategy.last
   case "plugin.properties" => MergeStrategy.last
-  case "log4j.properties" => MergeStrategy.last
+  case  x if x.endsWith("public-suffix-list.txt") => MergeStrategy.discard
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)

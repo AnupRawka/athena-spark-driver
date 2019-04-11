@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.b2wdigital.spark.athena.util
+package com.b2w.ml.spark.athena.util
 
 /**
  * Wrapper around an iterator which calls a completion method after it successfully iterates

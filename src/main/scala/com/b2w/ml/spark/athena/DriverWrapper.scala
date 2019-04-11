@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.b2wdigital.spark.athena
+package com.b2w.ml.spark.athena
 
 import java.sql.{Connection, Driver, DriverPropertyInfo, SQLFeatureNotSupportedException}
 import java.util.Properties

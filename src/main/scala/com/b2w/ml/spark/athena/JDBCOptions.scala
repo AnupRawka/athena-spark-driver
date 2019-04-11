@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.b2wdigital.spark.athena
+package com.b2w.ml.spark.athena
 
 import java.sql.{Connection, DriverManager}
 import java.util.{Locale, Properties}
@@ -74,19 +74,27 @@ class JDBCOptions(
     }
 
     if (!properties.containsKey("user") && !properties.containsKey("password")) {
-      val credentials = getCredentials
-//      properties.setProperty("aws_credentials_provider_class", "com.amazonaws.auth.InstanceProfileCredentialsProvider")
-      properties.setProperty("user", credentials.getAWSAccessKeyId)
-      properties.setProperty("password", credentials.getAWSSecretKey)
-    }
 
+      if(isAws)
+        properties
+          .setProperty("aws_credentials_provider_class", "com.amazonaws.auth.InstanceProfileCredentialsProvider")
+      else {
+        val credentials = getCredentials
+        properties.setProperty("user", credentials.getAWSAccessKeyId)
+        properties.setProperty("password", credentials.getAWSSecretKey)
+      }
+    }
     properties
   }
 
-  private def getCredentials:BasicAWSCredentials = {
-    val provider = new DefaultAWSCredentialsProviderChain()
-    provider.getCredentials.asInstanceOf[BasicAWSCredentials]
-  }
+  /// If there is a region defined, the machine is in AWS
+  private def isAws = {Regions.getCurrentRegion != null}
+
+  private def getCredentials:BasicAWSCredentials =
+    new DefaultAWSCredentialsProviderChain()
+      .getCredentials
+      .asInstanceOf[BasicAWSCredentials]
+
 
   // ------------------------------------------------------------
   // Required parameters

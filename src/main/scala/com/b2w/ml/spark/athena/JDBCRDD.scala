@@ -1,8 +1,8 @@
-package com.b2wdigital.spark.athena
+package com.b2w.ml.spark.athena
 
 import java.sql.{Connection, Date, ResultSet, SQLException, Statement, Timestamp}
 
-import com.b2wdigital.spark.athena.util.CompletionIterator
+import com.b2w.ml.spark.athena.util.CompletionIterator
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
