@@ -15,13 +15,14 @@
  * limitations under the License.
  */
 
-package io.github.tmheo.spark.athena
+package com.b2wdigital.spark.athena
 
 import java.sql.{Connection, DriverManager}
 import java.util.{Locale, Properties}
 
-import com.amazonaws.athena.jdbc.shaded.com.amazonaws.regions.Regions
+import com.amazonaws.auth.{BasicAWSCredentials, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder
+import com.simba.athena.amazonaws.regions.Regions
 import org.apache.spark.sql.catalyst.util.CaseInsensitiveMap
 
 /**
@@ -68,15 +69,23 @@ class JDBCOptions(
       } else {
         Regions.getCurrentRegion.getName
       }
-      val s3StagingDir = s"s3://aws-athena-query-results-${accountNumber}-${region}/"
+      val s3StagingDir = s"s3://aws-athena-query-results-$accountNumber-$region/"
       properties.setProperty("s3_staging_dir", s3StagingDir)
     }
 
     if (!properties.containsKey("user") && !properties.containsKey("password")) {
-      properties.setProperty("aws_credentials_provider_class", "com.amazonaws.auth.InstanceProfileCredentialsProvider")
+      val credentials = getCredentials
+//      properties.setProperty("aws_credentials_provider_class", "com.amazonaws.auth.InstanceProfileCredentialsProvider")
+      properties.setProperty("user", credentials.getAWSAccessKeyId)
+      properties.setProperty("password", credentials.getAWSSecretKey)
     }
 
     properties
+  }
+
+  private def getCredentials:BasicAWSCredentials = {
+    val provider = new DefaultAWSCredentialsProviderChain()
+    provider.getCredentials.asInstanceOf[BasicAWSCredentials]
   }
 
   // ------------------------------------------------------------
@@ -100,7 +109,7 @@ class JDBCOptions(
     val userSpecifiedDriverClass = if (parameters.get(JDBC_DRIVER_CLASS).isDefined) {
       parameters.get(JDBC_DRIVER_CLASS)
     } else {
-      Option("com.amazonaws.athena.jdbc.AthenaDriver")
+      Option("com.simba.athena.jdbc.Driver")
     }
     //parameters.get(JDBC_DRIVER_CLASS)
     userSpecifiedDriverClass.foreach(DriverRegistry.register)
@@ -173,20 +182,20 @@ object JDBCOptions {
     name
   }
 
-  val JDBC_URL = newOption("url")
-  val JDBC_TABLE_NAME = newOption("dbtable")
-  val JDBC_DRIVER_CLASS = newOption("driver")
-  val JDBC_PARTITION_COLUMN = newOption("partitionColumn")
-  val JDBC_LOWER_BOUND = newOption("lowerBound")
-  val JDBC_UPPER_BOUND = newOption("upperBound")
-  val JDBC_NUM_PARTITIONS = newOption("numPartitions")
-  val JDBC_BATCH_FETCH_SIZE = newOption("fetchsize")
-  val JDBC_TRUNCATE = newOption("truncate")
-  val JDBC_CREATE_TABLE_OPTIONS = newOption("createTableOptions")
-  val JDBC_CREATE_TABLE_COLUMN_TYPES = newOption("createTableColumnTypes")
-  val JDBC_BATCH_INSERT_SIZE = newOption("batchsize")
-  val JDBC_TXN_ISOLATION_LEVEL = newOption("isolationLevel")
+  val JDBC_URL:String = newOption("url")
+  val JDBC_TABLE_NAME:String = newOption("dbtable")
+  val JDBC_DRIVER_CLASS:String = newOption("driver")
+  val JDBC_PARTITION_COLUMN:String = newOption("partitionColumn")
+  val JDBC_LOWER_BOUND:String = newOption("lowerBound")
+  val JDBC_UPPER_BOUND:String = newOption("upperBound")
+  val JDBC_NUM_PARTITIONS:String = newOption("numPartitions")
+  val JDBC_BATCH_FETCH_SIZE:String = newOption("fetchsize")
+  val JDBC_TRUNCATE:String = newOption("truncate")
+  val JDBC_CREATE_TABLE_OPTIONS:String = newOption("createTableOptions")
+  val JDBC_CREATE_TABLE_COLUMN_TYPES:String = newOption("createTableColumnTypes")
+  val JDBC_BATCH_INSERT_SIZE:String = newOption("batchsize")
+  val JDBC_TXN_ISOLATION_LEVEL:String = newOption("isolationLevel")
 
-  val ATHENA_REGION = newOption("region")
+  val ATHENA_REGION:String = newOption("region")
 
 }

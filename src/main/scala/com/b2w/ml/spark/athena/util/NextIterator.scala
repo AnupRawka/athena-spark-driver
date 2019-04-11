@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.github.tmheo.spark.athena.util
+package com.b2wdigital.spark.athena.util
 
 /** Provides a basic/boilerplate Iterator implementation. */
 abstract class NextIterator[U] extends Iterator[U] {

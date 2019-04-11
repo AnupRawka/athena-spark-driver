@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package io.github.tmheo.spark.athena
+package com.b2wdigital.spark.athena
 
 import org.apache.spark.Partition
 import org.apache.spark.internal.Logging

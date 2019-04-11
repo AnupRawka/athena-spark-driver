@@ -15,12 +15,12 @@
  * limitations under the License.
  */
 
-package io.github.tmheo.spark.athena
+package com.b2wdigital.spark.athena
 
 import java.sql.{Connection, Driver, DriverManager, PreparedStatement, ResultSet, ResultSetMetaData, SQLException}
 import java.util.Locale
 
-import io.github.tmheo.spark.athena.util.NextIterator
+import com.b2wdigital.spark.athena.util.NextIterator
 import org.apache.spark.executor.InputMetrics
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.catalyst.InternalRow

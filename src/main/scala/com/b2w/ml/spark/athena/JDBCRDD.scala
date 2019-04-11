@@ -1,25 +1,8 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package io.github.tmheo.spark.athena
+package com.b2wdigital.spark.athena
 
 import java.sql.{Connection, Date, ResultSet, SQLException, Statement, Timestamp}
 
-import io.github.tmheo.spark.athena.util.CompletionIterator
+import com.b2wdigital.spark.athena.util.CompletionIterator
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.RDD
@@ -117,13 +100,13 @@ object JDBCRDD extends Logging {
       case GreaterThanOrEqual(attr, value) => s"${quote(attr)} >= ${compileValue(value)}"
       case IsNull(attr) => s"${quote(attr)} IS NULL"
       case IsNotNull(attr) => s"${quote(attr)} IS NOT NULL"
-      case StringStartsWith(attr, value) => s"${quote(attr)} LIKE '${value}%'"
-      case StringEndsWith(attr, value) => s"${quote(attr)} LIKE '%${value}'"
-      case StringContains(attr, value) => s"${quote(attr)} LIKE '%${value}%'"
+      case StringStartsWith(attr, value) => s"${quote(attr)} LIKE '$value%'"
+      case StringEndsWith(attr, value) => s"${quote(attr)} LIKE '%$value'"
+      case StringContains(attr, value) => s"${quote(attr)} LIKE '%$value%'"
       case In(attr, value) if value.isEmpty =>
         s"CASE WHEN ${quote(attr)} IS NULL THEN NULL ELSE FALSE END"
       case In(attr, value) => s"${quote(attr)} IN (${compileValue(value)})"
-      case Not(f) => compileFilter(f, dialect).map(p => s"(NOT ($p))").getOrElse(null)
+      case Not(f) => compileFilter(f, dialect).map(p => s"(NOT ($p))").orNull
       case Or(f1, f2) =>
         // We can't compile Or filter unless both sub-filters are compiled successfully.
         // It applies too for the following And filter.
