@@ -1,45 +1,69 @@
-# AWS Athena Data Source for Apache Spark
+# B2W Spark Athena Driver
 
-This library provides support for reading an [Amazon Athena](https://aws.amazon.com/athena/)
-table with [Apache Spark](https://spark.apache.org/) via Athena JDBC Driver.
+This library provides a JDBC [AWS Athena](https://aws.amazon.com/pt/athena/) reader for [Apache Spark](https://spark.apache.org/).
+This library is based on [tmheo/spark-athena](https://github.com/tmheo/spark-athena), but with some essential differences:
 
-I developed this library for the following reasons:
+* Is based on [Symba Athena JDBC Driver](https://docs.aws.amazon.com/athena/latest/ug/connect-with-jdbc.html), the most recent version oficially supported by athena.
+* Is actively maintained, once it is currently used in production at B2W, the biggest brazilian e-commerce.
+* Is query driven, instead of table driven
+* Uses AWS default credential chain, so, is capable of authenticating by credentials files and EC2 Instances.
+* This is build for [Spark 2.4.0](https://spark.apache.org/releases/spark-release-2-4-0.html) and [Scala 2.11](https://www.scala-lang.org/download/2.11.12.html) (there are plans for scala 2.12 versions once spark support is stable) 
 
-Apache Spark is implemented to use PreparedStatement when reading data through JDBC.
-However, because Athena JDBC Driver provided by AWS only implements Statement of JDBC Driver Spec and PreparedStatement is not implemented,
-Apache Spark can not read Athena data through JDBC.
+## Why we developed this:
 
-So I refer to the JDBC data source implementation code in [spark-sql](https://github.com/apache/spark/tree/master/sql/core/src/main/scala/org/apache/spark/sql/execution/datasources/jdbc)
-and change it to call Statement of Athena JDBC Driver so that Apache Spark can read Athena data.
+* Once quering on athena instead of directly in S3, we can use smaller instances for spark workers
+* No need for configuration and deploy hadoop dependencies for S3 management
+* Can be used locally,  EC2 Instances, or other cloud
+* You can use the same query performed on athena, no need adjustements
 
-**Table of Contents**
+## How to use
 
-- [DataFrame Usage](#dataframe-usage)
-  - [Configuration](#configuration)
+Once imported the implicits on `io.github.tmheo.spark.athena._` you can just use athena function as an extensions for spark dataframe readers:
 
-## DataFrame Usage
-
-You can register a Athena table and run SQL queries against it, or query with the Apache Spark SQL DSL.
-
-```
+```scala
+import org.apache.spark.sql.SparkSession
 import io.github.tmheo.spark.athena._
 
-// Read a table from current region with default s3 staging directory.
-val users = spark.read.athena("(select * from users)")
+val spark = SparkSession
+              .builder
+              .appName("Athena JDBC test")
+              .master("local[*]")
+              .getOrCreate // Or any other SparkSession instantiation
 
-// Read a table from current region with s3 staging directory.
-val users2 = spark.read.athena("users", "s3://staging_dir")
+val stagingDir = s"s3://bucket/athena-query-results" // Directory where athena query will be saved
 
-// Read a table from another region with s3 staging directory.
-val users3 = spark.read.athena("users", "us-east-1", "s3://staging_dir")
+val query =
+  """
+    |SELECT data from my table LIMIT 10
+  """.stripMargin
+
+val df1 = spark
+          .read
+          .athena(query, stagingDir)
 ```
 
-### Configuration
+If you are on an EC2 instance you can just use default s3 output directory for your account `s"s3://aws-athena-query-results-${account}-us-east-1/`:
 
-| Option | Description |
-| --- | --- |
-| `dbtable` | Athena Table or SQL Query |
-| `region` | AWS Region. Default value is current region |
-| `s3_staging_dir` | The Amazon S3 location to which your query output is written. Default value is **s3://aws-athena-query-results-${accountNumber}-${region}/** |
-| `user` | AWS Access Key Id. If you do not specify user, password, the library will try to use [InstanceProfileCredentialsProvider](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/InstanceProfileCredentialsProvider.html). |
-| `password` | AWS Secret Access Key. If you do not specify user, password, the library will try to use [InstanceProfileCredentialsProvider](http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/auth/InstanceProfileCredentialsProvider.html). |
+```scala
+val df1 = spark
+          .read
+          .athena(query)
+```
+ 
+Other signatures of `athena` functions are:
+
+* `def athena(query: String): DataFrame`
+* `def athena(query: String, region:Region): DataFrame`
+* `def athena(query: String, s3StatingDir:String, region:Region = Region.getRegion(Regions.US_EAST_1)): DataFrame`
+* `def athena(query: String, properties: Properties): DataFrame`
+
+The parameters are:
+
+* `query`: The query string to be performed on athena (as you may think)
+* `region`: AWS `Region` instance, the default is `US_EAST_1`
+* `s3StatingDir: s3 path where athena should output results. The default is `s3://aws-athena-query-results-${account}-us-east-1/` (works only on EC2 instances)
+* `properties`: A Java Properties object with the following parameters:
+    * `region`: AWS region name, like in (documentation)[https://docs.aws.amazon.com/general/latest/gr/rande.html]
+    * `s3_staging_dir`: the same as  `s3StatingDir`parameter
+    * `user`: The AWS Access Key Id
+    * `password`: The AWS Secret Key

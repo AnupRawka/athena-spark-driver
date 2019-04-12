@@ -14,7 +14,6 @@ package object athena {
   implicit class AthenaDataFrameReader(reader: DataFrameReader) {
 
     def athena(query: String): DataFrame = {
-
       athena(query, getCurrentRegion)
     }
 
@@ -32,7 +31,7 @@ package object athena {
 
     def athena(query: String, properties: Properties): DataFrame = {
       val options = properties.asScala
-      options += (JDBCOptions.JDBC_TABLE_NAME -> query)
+      options += (JDBCOptions.JDBC_TABLE_NAME -> s"($query)")
       reader.format("com.b2w.ml.spark.athena").options(options).load
     }
 
