@@ -22,7 +22,7 @@ Once imported the implicits on `io.github.tmheo.spark.athena._` you can just use
 
 ```scala
 import org.apache.spark.sql.SparkSession
-import io.github.tmheo.spark.athena._
+import com.b2w.ml.spark.athena._
 
 val spark = SparkSession
               .builder
